@@ -14,8 +14,14 @@ TARGET_YEAR = int(os.getenv("TARGET_YEAR", "2026"))
 CHROMA_PATH = os.getenv("CHROMA_PATH", "./chroma_db")
 CHROMA_COLLECTION = "immich_embeddings"
 
-# Immich thumbnail size to fetch — "thumbnail" is fast, "preview" is higher res
 THUMBNAIL_SIZE = "preview"
 
-# How many images to fetch per page from Immich
 PAGE_SIZE = 100
+
+TIME_THRESHOLD_HOURS = float(os.getenv("TIME_THRESHOLD_HOURS", "4.0"))
+
+VISUAL_TOLERANCE_EPS = float(os.getenv("VISUAL_TOLERANCE_EPS", "0.25"))
+
+MIN_SAMPLES = int(os.getenv("MIN_SAMPLES", "1"))
+
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./review_clusters")

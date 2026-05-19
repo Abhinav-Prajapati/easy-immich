@@ -1,29 +1,7 @@
-"""
-ChromaDB vector store.
-
-Stores DINOv2 embeddings alongside Immich asset metadata.
-ChromaDB handles persistence automatically at CHROMA_PATH.
-
-Collection schema per document:
-    id         : Immich asset ID (used as ChromaDB document ID)
-    embedding  : DINOv2 float32 vector
-    metadata   : {
-        fileName       : str,
-        localDateTime  : str  (ISO-8601),
-        year           : int,
-        month          : int,
-        width          : int | None,
-        height         : int | None,
-        make           : str | None,  (camera make from EXIF)
-        model          : str | None,  (camera model from EXIF)
-    }
-"""
-
 import numpy as np
 import chromadb
 from chromadb.config import Settings
 from src.config import CHROMA_PATH, CHROMA_COLLECTION
-
 
 class VectorStore:
     def __init__(self):
@@ -33,7 +11,7 @@ class VectorStore:
         )
         self.collection = self.client.get_or_create_collection(
             name=CHROMA_COLLECTION,
-            # cosine distance is standard for DINOv2 similarity search
+
             metadata={"hnsw:space": "cosine"},
         )
         print(f"Vector store ready at: {CHROMA_PATH}")
@@ -49,11 +27,10 @@ class VectorStore:
         Insert or update a single embedding.
         Safe to call multiple times — ChromaDB will overwrite on same ID.
         """
-        # Extract flat metadata fields (ChromaDB doesn't support nested dicts)
+
         exif = asset_meta.get("exifInfo") or {}
         local_dt = asset_meta.get("localDateTime", "")
 
-        # Parse year/month from localDateTime for easy filtering later
         year, month = 0, 0
         if local_dt:
             try:

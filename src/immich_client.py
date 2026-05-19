@@ -1,12 +1,3 @@
-"""
-Immich API client.
-
-Fetches image assets for a given year and downloads their thumbnails.
-Uses the Immich REST API:
-  - POST /api/search/metadata  → paginated asset search with date filters
-  - GET  /api/assets/{id}/thumbnail  → download thumbnail bytes
-"""
-
 import httpx
 from datetime import datetime, timezone
 from typing import Generator
@@ -18,19 +9,16 @@ from src.config import (
     THUMBNAIL_SIZE,
 )
 
-
 HEADERS = {
     "x-api-key": IMMICH_API_KEY,
     "Accept": "application/json",
 }
-
 
 def _date_range(year: int) -> tuple[str, str]:
     """Return ISO-8601 start/end strings for the full year."""
     start = datetime(year, 1, 1, tzinfo=timezone.utc).isoformat()
     end = datetime(year, 12, 31, 23, 59, 59, tzinfo=timezone.utc).isoformat()
     return start, end
-
 
 def fetch_assets(year: int = TARGET_YEAR) -> Generator[dict, None, None]:
     """
@@ -57,7 +45,6 @@ def fetch_assets(year: int = TARGET_YEAR) -> Generator[dict, None, None]:
             resp.raise_for_status()
             data = resp.json()
 
-            # Immich returns { assets: { items: [...], nextPage: int|null } }
             assets = data.get("assets", {})
             items = assets.get("items", [])
 
@@ -66,12 +53,10 @@ def fetch_assets(year: int = TARGET_YEAR) -> Generator[dict, None, None]:
 
             yield from items
 
-            # If no nextPage, we've exhausted all results
             if not assets.get("nextPage"):
                 break
 
             page += 1
-
 
 def download_thumbnail(asset_id: str, client: httpx.Client) -> bytes | None:
     """
@@ -88,7 +73,6 @@ def download_thumbnail(asset_id: str, client: httpx.Client) -> bytes | None:
     except httpx.HTTPError as e:
         print(f"  [warn] Could not download thumbnail for {asset_id}: {e}")
         return None
-
 
 def check_connection() -> dict:
     """Ping the Immich server and return server info."""

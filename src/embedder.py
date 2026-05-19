@@ -1,18 +1,9 @@
-"""
-DINOv2 embedding extractor.
-
-Loads the model once, then converts raw image bytes → 768/1024-d float vectors.
-The [CLS] token output from the last hidden state is used as the image embedding
-— this is the standard approach and what Meta recommends for retrieval tasks.
-"""
-
 import io
 import torch
 import numpy as np
 from PIL import Image
 from transformers import AutoImageProcessor, AutoModel
 from src.config import DINO_MODEL_ID
-
 
 class DinoEmbedder:
     def __init__(self):
@@ -22,7 +13,6 @@ class DinoEmbedder:
         self.model = AutoModel.from_pretrained(DINO_MODEL_ID)
         self.model.eval()
 
-        # Use GPU if available, MPS on Apple Silicon, else CPU
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
         elif torch.backends.mps.is_available():
@@ -52,7 +42,6 @@ class DinoEmbedder:
         with torch.no_grad():
             outputs = self.model(**inputs)
 
-        # CLS token = outputs.last_hidden_state[:, 0, :]
         embedding = outputs.last_hidden_state[:, 0, :].squeeze(0)
         return embedding.cpu().float().numpy()
 
@@ -84,7 +73,6 @@ class DinoEmbedder:
 
         embeddings_tensor = outputs.last_hidden_state[:, 0, :].cpu().float()
 
-        # Map back to original indices, filling None for failed images
         result: list[np.ndarray | None] = [None] * len(images_bytes)
         for batch_idx, original_idx in enumerate(valid_indices):
             result[original_idx] = embeddings_tensor[batch_idx].numpy()
